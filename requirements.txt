@@ -1,0 +1,14 @@
+certifi==2024.8.30
+charset-normalizer==3.4.0
+colorama==0.4.6
+conan==2.8.1
+fasteners==0.19
+idna==3.10
+Jinja2==3.1.4
+MarkupSafe==3.0.2
+patch-ng==1.18.1
+python-dateutil==2.9.0.post0
+PyYAML==6.0.2
+requests==2.32.3
+six==1.16.0
+urllib3==1.26.20

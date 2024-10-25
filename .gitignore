@@ -1,32 +1,14 @@
-# Prerequisites
-*.d
+# python virtual environment
+.venv
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Conan-generated files to ignore
+conanbuildinfo.*
+conaninfo.txt
+graph_info.json
 
-# Precompiled Headers
-*.gch
-*.pch
+# Output folders, if specified
+conan/
+build/
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+# Ignore user-specific CMake presets
+CMakeUserPresets.json
