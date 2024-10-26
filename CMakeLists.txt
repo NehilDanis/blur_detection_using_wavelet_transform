@@ -3,8 +3,16 @@ project(blur_detection_using_haar_wavelet_transform LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
+option(BUILD_TESTING "Build the tests" ON)
 
 find_package(OpenCV REQUIRED)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
-target_link_libraries(${PROJECT_NAME} opencv::opencv)
+add_library(${PROJECT_NAME} INTERFACE)
+
+target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(${PROJECT_NAME} INTERFACE opencv::opencv)
+
+# Only include tests if this is the test context
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()
