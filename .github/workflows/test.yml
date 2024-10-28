@@ -13,7 +13,6 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    needs: build  # This makes 'test' depend on the successful completion of 'build'
     steps:
       - uses: actions/checkout@v4
 
