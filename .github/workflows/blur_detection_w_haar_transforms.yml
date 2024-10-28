@@ -43,7 +43,11 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build/release -j4
 
-    - name: Test
-      working-directory: ${{github.workspace}}/build/release
-      run: ./test/test_blur_detection
+  test:
+    runs-on: ubuntu-latest
+    needs: build  # This makes 'test' depend on the successful completion of 'build'
+    steps:
+      - name: Test
+        working-directory: ${{github.workspace}}/build/release
+        run: ./test/test_blur_detection
 
