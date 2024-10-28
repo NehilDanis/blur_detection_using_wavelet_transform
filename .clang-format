@@ -1,0 +1,20 @@
+# .clang-format file for Google C++ Style Guide
+
+# Use the Google style guide
+BasedOnStyle: Google
+
+# Formatting options
+IndentWidth: 4                      # Indentation with 4 spaces
+UseTab: Never                        # Do not use tabs
+ColumnLimit: 80                      # Maximum line length
+AllowShortBlocksOnASingleLine: true  # Allow short blocks on a single line
+AllowShortCaseLabelsOnASingleLine: true # Allow short case labels on a single line
+AllowShortIfStatementsOnASingleLine: true # Allow short if statements on a single line
+AllowShortLoopsOnASingleLine: true  # Allow short loops on a single line
+SpaceBeforeParens: ControlStatements # Add space before parentheses in control statements
+SpaceBeforeBraces: Allman            # Use Allman style for braces
+BreakBeforeBraces: Allman            # Always break before braces
+SpacesInParentheses: false           # Do not add spaces inside parentheses
+SpacesInAngles: false                # Do not add spaces inside angle brackets
+SpaceAfterCStyleCast: true           # Add space after C-style casts
+Cpp11BracedListStyle: true           # Use C++11 brace initialization style
