@@ -6,6 +6,7 @@ class BlurDetectionusingWaveletTransforms(ConanFile):
     settings = ("os", "build_type", "arch", "compiler")
     def requirements(self):
         self.requires("opencv/4.10.0")
+        self.requires("range-v3/0.12.0")
     
     def build_requirements(self):
         self.tool_requires("cmake/[>=3.25]")
