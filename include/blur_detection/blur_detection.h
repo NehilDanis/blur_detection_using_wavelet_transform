@@ -40,7 +40,7 @@ inline auto haar_transform(cv::InputArray src, cv::InputOutputArray LL,
  */
 inline auto calculate_edge_map(cv::InputArray LH, cv::InputArray HL,
                                cv::InputArray HH,
-                               cv::OutputArray edge_map) -> void
+                               std::vector<float>& edge_map) -> void
 {
 }
 
@@ -55,8 +55,26 @@ inline auto calculate_edge_map(cv::InputArray LH, cv::InputArray HL,
  * @param max_edge_map
  */
 inline auto calculate_max_edge_map(cv::InputArray edge_map, size_t filter_size,
-                                   cv::OutputArray max_edge_map) -> void
+                                   std::vector<float>& max_edge_map) -> void
 {
+    size_t stride = filter_size;
+    const auto& edge_map_mat = edge_map.getMat();
+    auto num_row_pass = (edge_map_mat.rows / filter_size);
+    auto num_col_pass = (edge_map_mat.cols / filter_size);
+    size_t output_size =
+        (edge_map_mat.rows / filter_size) * (edge_map_mat.cols / filter_size);
+    max_edge_map.resize(output_size);
+
+    for (auto r = 0U; r < num_row_pass; r++)
+    {
+        for (auto c = 0U; c < num_col_pass; c++) {
+            auto start_point_x = c * filter_size;
+            auto start_point_y = r * filter_size; 
+            const cv::Mat& tmp = edge_map_mat(cv::Rect(start_point_x, start_point_y, filter_size, filter_size));
+            auto max_itr = std::max_element(tmp.begin<float>(), tmp.end<float>());
+            max_edge_map.at(r * num_col_pass + c )  = *max_itr;
+        }
+    }
 }
 
 }  // namespace detail
