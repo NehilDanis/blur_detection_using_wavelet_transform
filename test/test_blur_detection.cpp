@@ -11,7 +11,7 @@
 #include <range/v3/all.hpp>
 
 TEST(BlurDetectionUsingHaarWaveletTransforms,
-     testMaxEdgeMapCalculation_empty_matrix)
+     testMaxEdgeMapCalculationWithEmptyMatrix)
 {
     cv::Mat input;
     std::vector<float> output;
@@ -22,7 +22,7 @@ TEST(BlurDetectionUsingHaarWaveletTransforms,
 }
 
 TEST(BlurDetectionUsingHaarWaveletTransforms,
-     testMaxEdgeMapCalculation_check_matrices_smaller_than_filter_size)
+     testMaxEdgeMapCalculationMatricesSmallerThanFilterSsize)
 {
     cv::Mat input = cv::Mat::zeros(cv::Size(1, 4), CV_32F);  // 4x1
     std::vector<float> output;
