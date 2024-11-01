@@ -1,4 +1,3 @@
-
 // GTest
 #include <gtest/gtest.h>
 
@@ -17,22 +16,22 @@ TEST(BlurDetectionUsingHaarWaveletTransforms,
     std::vector<float> output;
     static constexpr size_t filter_size = 2;
 
-    blur_detection::detail::calculate_max_edge_map(input, filter_size, output);
+    blur_detection::detail::calculate_max_edge_map<float>(input, filter_size, output);
     ASSERT_EQ(output.size(), 0);
 }
 
 TEST(BlurDetectionUsingHaarWaveletTransforms,
      testMaxEdgeMapCalculationMatricesSmallerThanFilterSsize)
 {
-    cv::Mat input = cv::Mat::zeros(cv::Size(1, 4), CV_32F);  // 4x1
+    cv::Mat input = cv::Mat::zeros(cv::Size(1, 4), cv::DataType<float>::type);  // 4x1
     std::vector<float> output;
     static constexpr size_t filter_size = 2;
 
-    blur_detection::detail::calculate_max_edge_map(input, filter_size, output);
+    blur_detection::detail::calculate_max_edge_map<float>(input, filter_size, output);
     ASSERT_EQ(output.size(), 0);
 
     input.reshape(0, 1);  // makes 1x4
-    blur_detection::detail::calculate_max_edge_map(input, filter_size, output);
+    blur_detection::detail::calculate_max_edge_map<float>(input, filter_size, output);
     ASSERT_EQ(output.size(), 0);
 }
 
@@ -46,7 +45,7 @@ TEST(BlurDetectionUsingHaarWaveletTransforms, testMaxEdgeMapCalculation)
     static constexpr size_t filter_size = 2;
     static constexpr float tolerance = 1e-6;
 
-    blur_detection::detail::calculate_max_edge_map(input, filter_size, output);
+    blur_detection::detail::calculate_max_edge_map<float>(input, filter_size, output);
     ASSERT_EQ(output.size(), gt_output.size());
 
     auto zipped = ranges::zip_view(output, gt_output);
@@ -55,6 +54,16 @@ TEST(BlurDetectionUsingHaarWaveletTransforms, testMaxEdgeMapCalculation)
             const auto &[expected, gt] = pair;
             EXPECT_NEAR(expected, gt, tolerance);
         });
+}
+
+TEST(BlurDetectionUsingHaarWaveletTransforms, testEdgeMapCalculationWithEdgeMapsDifferentInSize)
+{
+    // cv::Mat LH{cv::Mat::zeros(cv::Size(3, 3), cv::DataType<float>::type)};
+    // cv::Mat HL{cv::Mat::zeros(cv::Size(3, 3), cv::DataType<float>::type)};
+    // cv::Mat HH{cv::Mat::zeros(cv::Size(3, 3), cv::DataType<float>::type)};
+    // std::vector<float> edge_map;
+
+    // blur_detection::detail::calculate_edge_map(LH, HL, HH, edge_map);
 }
 
 TEST(BlurDetectionUsingHaarWaveletTransforms, testEdgeMapCalculation)
@@ -74,6 +83,6 @@ TEST(BlurDetectionUsingHaarWaveletTransforms, testBlurriness)
     static constexpr float threshold = 35;
     static constexpr float min_zero = 0.05;
 
-    auto output = blur_detection::is_blur(img, threshold, min_zero);
+    auto output = blur_detection::is_blur<float>(img, threshold, min_zero);
     ASSERT_FALSE(output.has_value());
 }
