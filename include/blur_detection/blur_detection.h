@@ -8,6 +8,7 @@
 // OpenCV
 #include <opencv2/core.hpp>
 #include <opencv2/core/traits.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 namespace blur_detection
 {
@@ -112,10 +113,23 @@ inline auto calculate_max_edge_map(const cv::Mat_<T>& edge_map, size_t filter_si
  * @returns The blur extent in case of a blurry image, otherwise nullopt.
  */
 template <Floating_point_type T>
-inline auto is_blur(cv::InputArray img, T threshold,
+inline auto is_blur(const cv::Mat& img, T threshold,
                     T min_zero) -> std::optional<T>
 {
-    // conver the image to gray scale, and the type to float
+    cv::Mat gray_img;
+    img.copyTo(gray_img);
+    // convert the image to gray scale
+    if(img.channels() == 3) {
+        cv::cvtColor(img, gray_img, cv::COLOR_BGR2GRAY);
+    }
+
+    // convert to floating point number but keep the intensity values between [0, 255]
+    if(std::is_same_v<T, float>) { // in case T is float
+        gray_img.convertTo(gray_img, CV_32F);
+    }
+    else { // in case T is double
+        gray_img.convertTo(gray_img, CV_64F);
+    }
 
     // 3-Level Haar Transform
 
