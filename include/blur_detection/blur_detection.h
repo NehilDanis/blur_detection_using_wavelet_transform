@@ -31,23 +31,63 @@ namespace detail
  * @brief This function takes a source image and applies one level of the haar
  * filter and outputs low and high spatial resolution outputs.
  *
- * @param LL
- * @param LH
- * @param HL
- * @param HH
+ * @param LL weighted average
+ * @param LH vertical detail
+ * @param HL horizontal detail
+ * @param HH diagonal detail
  */
 template <Floating_point_type T>
-inline auto haar_transform(const cv::Mat_<T>& src, cv::OutputArray LL,
+inline auto haar_transform(const cv::Mat& src, cv::OutputArray LL,
                            cv::OutputArray LH, cv::OutputArray HL,
                            cv::OutputArray HH) -> void
 {
-    constexpr size_t filter_size = 2;
-    constexpr float coeff = 1/2;
+    CV_Assert(src.type() == cv::traits::Type<T>::value);
+    constexpr size_t side = 2;
+    CV_Assert(src.rows >= side && src.cols >= 2);
+    auto filter_size = cv::Size(side, side);
+    T coeff = static_cast<T>(0.5f);
 
-    int width = src.cols;
-    int height = src.rows;
+    cv::Mat ll_kernel =
+        (cv::Mat_<float>(filter_size) << coeff, coeff, coeff, coeff);
+    cv::Mat lh_kernel =
+        (cv::Mat_<float>(filter_size) << coeff, -coeff, coeff, -coeff);
+    cv::Mat hl_kernel =
+        (cv::Mat_<float>(filter_size) << coeff, coeff, -coeff, -coeff);
+    cv::Mat hh_kernel =
+        (cv::Mat_<float>(filter_size) << coeff, -coeff, -coeff, coeff);
 
+    int num_row_pass = src.rows / side;
+    int num_col_pass = src.cols / side;
 
+    LL.create(num_row_pass, num_col_pass, src.type());
+    LH.create(num_row_pass, num_col_pass, src.type());
+    HL.create(num_row_pass, num_col_pass, src.type());
+    HH.create(num_row_pass, num_col_pass, src.type());
+
+    auto ll_tmp = LL.getMat();
+    auto lh_tmp = LH.getMat();
+    auto hl_tmp = HL.getMat();
+    auto hh_tmp = HH.getMat();
+
+    for (auto r = 0U; r < num_row_pass; r++)
+    {
+        for (auto c = 0U; c < num_col_pass; c++)
+        {
+            auto start_row = r * side;
+            auto start_col = c * side;
+            const auto& rect_tmp =
+                src(cv::Rect(start_col, start_row, side, side));
+            // element wise multiplication and summation of all elements.
+            ll_tmp.at<T>(start_row, start_col) =
+                cv::sum(rect_tmp.mul(ll_kernel)).val[0];
+            lh_tmp.at<T>(start_row, start_col) =
+                cv::sum(rect_tmp.mul(lh_kernel)).val[0];
+            hl_tmp.at<T>(start_row, start_col) =
+                cv::sum(rect_tmp.mul(hl_kernel)).val[0];
+            hh_tmp.at<T>(start_row, start_col) =
+                cv::sum(rect_tmp.mul(hh_kernel)).val[0];
+        }
+    }
 }
 
 /**
@@ -82,11 +122,12 @@ inline auto calculate_edge_map(const cv::Mat& LH, const cv::Mat& HL,
     auto hh_range = std::ranges::subrange(HH.begin<T>(), HH.end<T>());
     auto edge_map_range =
         std::ranges::subrange(edge_map_mat.begin<T>(), edge_map_mat.end<T>());
-    
+
     auto zipped = ranges::views::zip(lh_range, hl_range, hh_range);
     std::ranges::transform(zipped.begin(), zipped.end(), edge_map_range.begin(),
-                           [](const auto tuple_elem) {
-                                const auto [lh, hl, hh] = tuple_elem;
+                           [](const auto tuple_elem)
+                           {
+                               const auto [lh, hl, hh] = tuple_elem;
                                return std::sqrt(std::pow(lh, 2) +
                                                 std::pow(hl, 2) +
                                                 std::pow(hh, 2));
@@ -104,8 +145,7 @@ inline auto calculate_edge_map(const cv::Mat& LH, const cv::Mat& HL,
  * @param max_edge_map
  */
 template <Floating_point_type T>
-inline auto calculate_max_edge_map(const cv::Mat& edge_map,
-                                   size_t filter_size,
+inline auto calculate_max_edge_map(const cv::Mat& edge_map, size_t filter_size,
                                    std::vector<T>& max_edge_map) -> void
 {
     CV_Assert(edge_map.type() == cv::traits::Type<T>::value);
@@ -124,8 +164,7 @@ inline auto calculate_max_edge_map(const cv::Mat& edge_map,
             auto start_point_y = r * filter_size;
             const cv::Mat& tmp = edge_map(cv::Rect(start_point_x, start_point_y,
                                                    filter_size, filter_size));
-            auto max_itr =
-                std::max_element(tmp.begin<T>(), tmp.end<T>());
+            auto max_itr = std::max_element(tmp.begin<T>(), tmp.end<T>());
             max_edge_map.at(r * num_col_pass + c) = *max_itr;
         }
     }

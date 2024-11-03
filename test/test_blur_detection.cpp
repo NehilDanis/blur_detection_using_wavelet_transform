@@ -93,7 +93,59 @@ TEST(BlurDetectionUsingHaarWaveletTransforms, testEdgeMapCalculation)
 
 TEST(BlurDetectionUsingHaarWaveletTransforms, testHaarTransform)
 {
-    ASSERT_TRUE(true);
+    /**
+     * src  1, 1
+     *      1, 1
+     */
+    cv::Size gt_size{1, 1};
+    cv::Mat src = cv::Mat::ones(2, 2, cv::DataType<float>::type);
+    cv::Mat LL, LH, HL, HH;
+    blur_detection::detail::haar_transform<float>(src, LL, LH, HL, HH);
+    ASSERT_EQ(LL.size(), gt_size);
+    ASSERT_EQ(LH.size(), gt_size);
+    ASSERT_EQ(HL.size(), gt_size);
+    ASSERT_EQ(HH.size(), gt_size);
+    ASSERT_NEAR(LL.at<float>(0, 0), 2.0f, TOLERANCE);
+    ASSERT_NEAR(LH.at<float>(0, 0), 0.0f, TOLERANCE);
+    ASSERT_NEAR(HL.at<float>(0, 0), 0.0f, TOLERANCE);
+    ASSERT_NEAR(HH.at<float>(0, 0), 0.0f, TOLERANCE);
+
+    /**
+     * src  1, 2
+     *      1, 2
+     */
+    src.at<float>(0, 1) = 2;
+    src.at<float>(1, 1) = 2;
+    blur_detection::detail::haar_transform<float>(src, LL, LH, HL, HH);
+    ASSERT_NEAR(LL.at<float>(0, 0), 3.0f, TOLERANCE);
+    ASSERT_NEAR(LH.at<float>(0, 0), -1.0f, TOLERANCE);
+    ASSERT_NEAR(HL.at<float>(0, 0), 0.0f, TOLERANCE);
+    ASSERT_NEAR(HH.at<float>(0, 0), 0.0f, TOLERANCE);
+
+    /**
+     * src  1, 1
+     *      2, 2
+     */
+
+    src.at<float>(0, 1) = 1;
+    src.at<float>(1, 0) = 2;
+    blur_detection::detail::haar_transform<float>(src, LL, LH, HL, HH);
+    ASSERT_NEAR(LL.at<float>(0, 0), 3.0f, TOLERANCE);
+    ASSERT_NEAR(LH.at<float>(0, 0), 0.0f, TOLERANCE);
+    ASSERT_NEAR(HL.at<float>(0, 0), -1.0f, TOLERANCE);
+    ASSERT_NEAR(HH.at<float>(0, 0), 0.0f, TOLERANCE);
+
+
+    /**
+     * src  1, 3
+     *      2, 2
+     */
+    src.at<float>(0, 1) = 3;
+    blur_detection::detail::haar_transform<float>(src, LL, LH, HL, HH);
+    ASSERT_NEAR(LL.at<float>(0, 0), 4.0f, TOLERANCE);
+    ASSERT_NEAR(LH.at<float>(0, 0), -1.0f, TOLERANCE);
+    ASSERT_NEAR(HL.at<float>(0, 0), 0.0f, TOLERANCE);
+    ASSERT_NEAR(HH.at<float>(0, 0), -1.0f, TOLERANCE);
 }
 
 TEST(BlurDetectionUsingHaarWaveletTransforms, testBlurriness)
