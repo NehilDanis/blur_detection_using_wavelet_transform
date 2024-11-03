@@ -4,6 +4,7 @@
 # Conan-generated files to ignore
 conanbuildinfo.*
 conaninfo.txt
+conan.lock
 graph_info.json
 
 # Output folders, if specified
@@ -12,3 +13,6 @@ build/
 
 # Ignore user-specific CMake presets
 CMakeUserPresets.json
+
+# vscode specific
+.vscode
