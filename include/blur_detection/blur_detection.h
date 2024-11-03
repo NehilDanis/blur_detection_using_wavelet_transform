@@ -2,8 +2,11 @@
 #define BLUR_DETECTION_H  // Define MY_HEADER_H to prevent future inclusions
 
 // STL
+#include <algorithm>
 #include <concepts>
 #include <optional>
+#include <range/v3/all.hpp>
+#include <ranges>
 
 // OpenCV
 #include <opencv2/core.hpp>
@@ -52,10 +55,35 @@ inline auto haar_transform(const cv::Mat_<T>& src, cv::OutputArray LL,
  * @param edge_map
  */
 template <Floating_point_type T>
-inline auto calculate_edge_map(const cv::Mat_<T>& LH, const cv::Mat_<T>& HL,
-                               const cv::Mat_<T>& HH,
-                               std::vector<T>& edge_map) -> void
+inline auto calculate_edge_map(const cv::Mat& LH, const cv::Mat& HL,
+                               const cv::Mat& HH,
+                               cv::OutputArray edge_map) -> void
 {
+    CV_Assert(LH.type() == HL.type() && HL.type() == HH.type() &&
+              LH.type() == cv::traits::Type<T>::value &&
+              LH.size() == HL.size() && HL.size() == HH.size());
+
+    int height = LH.rows;
+    int width = LH.cols;
+
+    edge_map.create(cv::Size(width, height), LH.type());
+
+    auto edge_map_mat = edge_map.getMat();
+
+    auto lh_range = std::ranges::subrange(LH.begin<T>(), LH.end<T>());
+    auto hl_range = std::ranges::subrange(HL.begin<T>(), HL.end<T>());
+    auto hh_range = std::ranges::subrange(HH.begin<T>(), HH.end<T>());
+    auto edge_map_range =
+        std::ranges::subrange(edge_map_mat.begin<T>(), edge_map_mat.end<T>());
+    
+    auto zipped = ranges::views::zip(lh_range, hl_range, hh_range);
+    std::ranges::transform(zipped.begin(), zipped.end(), edge_map_range.begin(),
+                           [](const auto tuple_elem) {
+                                const auto [lh, hl, hh] = tuple_elem;
+                               return std::sqrt(std::pow(lh, 2) +
+                                                std::pow(hl, 2) +
+                                                std::pow(hh, 2));
+                           });
 }
 
 /**
@@ -69,7 +97,8 @@ inline auto calculate_edge_map(const cv::Mat_<T>& LH, const cv::Mat_<T>& HL,
  * @param max_edge_map
  */
 template <Floating_point_type T>
-inline auto calculate_max_edge_map(const cv::Mat_<T>& edge_map, size_t filter_size,
+inline auto calculate_max_edge_map(const cv::Mat_<T>& edge_map,
+                                   size_t filter_size,
                                    std::vector<T>& max_edge_map) -> void
 {
     size_t stride = filter_size;
@@ -85,10 +114,10 @@ inline auto calculate_max_edge_map(const cv::Mat_<T>& edge_map, size_t filter_si
         {
             auto start_point_x = c * filter_size;
             auto start_point_y = r * filter_size;
-            const cv::Mat& tmp = edge_map(cv::Rect(
-                start_point_x, start_point_y, filter_size, filter_size));
+            const cv::Mat& tmp = edge_map(cv::Rect(start_point_x, start_point_y,
+                                                   filter_size, filter_size));
             auto max_itr =
-                std::max_element(tmp.begin<float>(), tmp.end<float>());
+                std::max_element(tmp.begin<T>(), tmp.end<T>());
             max_edge_map.at(r * num_col_pass + c) = *max_itr;
         }
     }
@@ -119,15 +148,19 @@ inline auto is_blur(const cv::Mat& img, T threshold,
     cv::Mat gray_img;
     img.copyTo(gray_img);
     // convert the image to gray scale
-    if(img.channels() == 3) {
+    if (img.channels() == 3)
+    {
         cv::cvtColor(img, gray_img, cv::COLOR_BGR2GRAY);
     }
 
-    // convert to floating point number but keep the intensity values between [0, 255]
-    if(std::is_same_v<T, float>) { // in case T is float
+    // convert to floating point number but keep the intensity values between
+    // [0, 255]
+    if (std::is_same_v<T, float>)
+    {  // in case T is float
         gray_img.convertTo(gray_img, CV_32F);
     }
-    else { // in case T is double
+    else
+    {  // in case T is double
         gray_img.convertTo(gray_img, CV_64F);
     }
 
