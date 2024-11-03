@@ -1,5 +1,5 @@
-#ifndef BLUR_DETECTION_H  // Check if MY_HEADER_H is not defined
-#define BLUR_DETECTION_H  // Define MY_HEADER_H to prevent future inclusions
+#ifndef BLUR_DETECTION_H  // BLUR_DETECTION_H
+#define BLUR_DETECTION_H  // BLUR_DETECTION_H
 
 // STL
 #include <algorithm>
@@ -41,6 +41,13 @@ inline auto haar_transform(const cv::Mat_<T>& src, cv::OutputArray LL,
                            cv::OutputArray LH, cv::OutputArray HL,
                            cv::OutputArray HH) -> void
 {
+    constexpr size_t filter_size = 2;
+    constexpr float coeff = 1/2;
+
+    int width = src.cols;
+    int height = src.rows;
+
+
 }
 
 /**
