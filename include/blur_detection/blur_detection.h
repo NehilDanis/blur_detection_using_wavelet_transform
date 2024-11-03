@@ -69,22 +69,23 @@ inline auto haar_transform(const cv::Mat& src, cv::OutputArray LL,
     auto hl_tmp = HL.getMat();
     auto hh_tmp = HH.getMat();
 
-    for (auto r = 0U; r < num_row_pass; r++)
+    for (int r = 0; r < num_row_pass; r++)
     {
-        for (auto c = 0U; c < num_col_pass; c++)
+        for (int c = 0; c < num_col_pass; c++)
         {
             auto start_row = r * side;
             auto start_col = c * side;
             const auto& rect_tmp =
                 src(cv::Rect(start_col, start_row, side, side));
+            cv::Mat tmp = rect_tmp.mul(ll_kernel);
             // element wise multiplication and summation of all elements.
-            ll_tmp.at<T>(start_row, start_col) =
+            ll_tmp.at<T>(r, c) =
                 cv::sum(rect_tmp.mul(ll_kernel)).val[0];
-            lh_tmp.at<T>(start_row, start_col) =
+            lh_tmp.at<T>(r, c) =
                 cv::sum(rect_tmp.mul(lh_kernel)).val[0];
-            hl_tmp.at<T>(start_row, start_col) =
+            hl_tmp.at<T>(r, c) =
                 cv::sum(rect_tmp.mul(hl_kernel)).val[0];
-            hh_tmp.at<T>(start_row, start_col) =
+            hh_tmp.at<T>(r, c) =
                 cv::sum(rect_tmp.mul(hh_kernel)).val[0];
         }
     }
@@ -192,31 +193,61 @@ template <Floating_point_type T>
 inline auto is_blur(const cv::Mat& img, T threshold,
                     T min_zero) -> std::optional<T>
 {
-    cv::Mat gray_img;
-    img.copyTo(gray_img);
+    cv::Mat gray_img = img.clone();
     // convert the image to gray scale
     if (img.channels() == 3)
     {
         cv::cvtColor(img, gray_img, cv::COLOR_BGR2GRAY);
     }
 
-    // convert to floating point number but keep the intensity values between
-    // [0, 255]
-    if (std::is_same_v<T, float>)
-    {  // in case T is float
-        gray_img.convertTo(gray_img, CV_32F);
-    }
-    else
-    {  // in case T is double
-        gray_img.convertTo(gray_img, CV_64F);
-    }
+    T alpha = static_cast<T>(1.0f / 255.0f);
+    // the data type of the gray image is set to either CV_32F or CV_64F using T
+    // the values in the gray image scaled using 1 / 255 to bring all the values
+    // to [0, 1] range
+    gray_img.convertTo(gray_img, std::is_same_v<T, float> ? CV_32F : CV_64F, alpha);
+
+    // since image values are now in [0, 1] range threshold is also scaled using
+    // 1 / 255
+    threshold /= alpha;
+
+    cv::imwrite("gray.png", gray_img);
 
     // 3-Level Haar Transform
+    cv::Mat LL1, LH1, HL1, HH1;
+    detail::haar_transform<T>(gray_img, LL1, LH1, HL1,
+                              HH1);  // apply transform on gray img
+
+    cv::Mat LL2, LH2, HL2, HH2;
+    detail::haar_transform<T>(LL1, LL2, LH2, HL2,
+                              HH2);  // apply transform on LL1
+
+    cv::Mat LL3, LH3, HL3, HH3;
+    detail::haar_transform<T>(LL2, LL3, LH3, HL3,
+                              HH3);  // apply transform on LL2
 
     // find edge_maps on these 3 levels
+    std::array<cv::Mat, 3> edge_maps{};
+
+    blur_detection::detail::calculate_edge_map<T>(LH1, HL1, HH1,
+                                                  edge_maps.at(0));
+    blur_detection::detail::calculate_edge_map<T>(LH2, HL2, HH2,
+                                                  edge_maps.at(1));
+    blur_detection::detail::calculate_edge_map<T>(LH3, HL3, HH3,
+                                                  edge_maps.at(2));
 
     // find maximum edge_map for all levels using 8x8, 4x4, and 2x2 filters,
     // from largest image to smallest
+    std::array<std::vector<T>, 3> max_edge_maps{};
+    constexpr size_t filter_size = 2;
+    blur_detection::detail::calculate_max_edge_map<T>(
+        edge_maps.at(0), std::pow(filter_size, 3),
+        max_edge_maps.at(0));  // 8 x 8
+    blur_detection::detail::calculate_max_edge_map<T>(
+        edge_maps.at(1), std::pow(filter_size, 2),
+        max_edge_maps.at(1));  // 4 x 4
+    blur_detection::detail::calculate_max_edge_map<T>(
+        edge_maps.at(2), std::pow(filter_size, 1),
+        max_edge_maps.at(2));  // 2 x 2
 
     // Apply algorithm 2 to see if the image is blurry or not
     // if yes to what extent
