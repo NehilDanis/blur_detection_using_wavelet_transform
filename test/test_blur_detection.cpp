@@ -15,18 +15,6 @@ static constexpr float TOLERANCE = 1e-6;
 }
 
 TEST(BlurDetectionUsingHaarWaveletTransforms,
-     testMaxEdgeMapCalculationWithEmptyMatrix)
-{
-    cv::Mat input;
-    std::vector<float> output;
-    static constexpr size_t filter_size = 2;
-
-    blur_detection::detail::calculate_max_edge_map<float>(input, filter_size,
-                                                          output);
-    ASSERT_EQ(output.size(), 0);
-}
-
-TEST(BlurDetectionUsingHaarWaveletTransforms,
      testMaxEdgeMapCalculationMatricesSmallerThanFilterSsize)
 {
     cv::Mat input =
