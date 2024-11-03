@@ -97,10 +97,11 @@ inline auto calculate_edge_map(const cv::Mat& LH, const cv::Mat& HL,
  * @param max_edge_map
  */
 template <Floating_point_type T>
-inline auto calculate_max_edge_map(const cv::Mat_<T>& edge_map,
+inline auto calculate_max_edge_map(const cv::Mat& edge_map,
                                    size_t filter_size,
                                    std::vector<T>& max_edge_map) -> void
 {
+    CV_Assert(edge_map.type() == cv::traits::Type<T>::value);
     size_t stride = filter_size;
     auto num_row_pass = (edge_map.rows / filter_size);
     auto num_col_pass = (edge_map.cols / filter_size);
