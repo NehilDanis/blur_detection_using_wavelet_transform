@@ -178,37 +178,57 @@ inline auto check_blur_extent(std::span<T> max_edge_map_1,
 
     auto zipped =
         ranges::views::zip(max_edge_map_1, max_edge_map_2, max_edge_map_3);
+        
     auto edge_count = 0U;
     auto n_da = 0U;
+    auto n_rg = 0U;
+    auto n_brg = 0U;
 
-    auto rule_1 = [&](int i)
+    auto rule_1 = [threshold](auto zipped)
     {
-        const auto& [emax_1, emax_2, emax_3] = zipped[i];
-        if (emax_1 > threshold || emax_2 > threshold || emax_3 > threshold)
-        {
-            edge_count++;
-            return true;
-        };
-        return false;
+        const auto& [emax_1, emax_2, emax_3] = zipped;
+        return emax_1 > threshold || emax_2 > threshold || emax_3 > threshold;
     };
 
-    auto rule_2 = [&](int i)
+    auto rule_2 = [](auto zipped)
     {
-        const auto& [emax_1, emax_2, emax_3] = zipped[i];
-        if (emax_1 > emax_2 && emax_2 > emax_3) { n_da++; }
+        const auto& [emax_1, emax_2, emax_3] = zipped;
+        return emax_1 > emax_2 && emax_2 > emax_3;
     };
 
-    auto edges = std::views::iota(0) | std::views::take(max_edge_map_1.size()) |
-                 std::views::filter(rule_1);
+    auto rule_3_4 = [](auto zipped)
+    {
+        const auto& [emax_1, emax_2, emax_3] = zipped;
+        return (emax_1 < emax_2 && emax_2 < emax_3) ||
+               (emax_2 > emax_1 && emax_2 > emax_3);
+    };
 
-    std::ranges::for_each(edges, rule_2);
+    auto rule_5 = [threshold](auto zipped)
+    {
+        const auto& [emax_1, emax_2, emax_3] = zipped;
+        return emax_1 < threshold;
+    };
+
+    auto edges = zipped | std::views::filter(rule_1);
+
+    auto dirac_astep_structures = edges | std::views::filter(rule_2);
+
+    edge_count = std::ranges::distance(edges);
+    n_da = std::ranges::distance(dirac_astep_structures);
 
     auto per = static_cast<T>(n_da) / static_cast<T>(edge_count);
     auto is_blurry = true;
     if (per > min_zero) { is_blurry = false; }
 
+    auto roof_gstep_structures = edges | std::views::filter(rule_3_4);
+    auto blurred_roof_gstep_structures =
+        roof_gstep_structures | std::views::filter(rule_5);
+
+    n_rg = std::ranges::distance(roof_gstep_structures);
+    n_brg = std::ranges::distance(blurred_roof_gstep_structures);
+
     // calculate the blur extent
-    T blur_extent{};
+    T blur_extent = static_cast<T>(n_brg) / static_cast<T>(n_rg);
 
     return std::make_pair(is_blurry, blur_extent);
 }
