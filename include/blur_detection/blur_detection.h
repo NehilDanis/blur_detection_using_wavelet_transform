@@ -168,13 +168,14 @@ inline auto calculate_max_edge_map(const cv::Mat& edge_map, size_t filter_size,
 }
 
 template <Floating_point_type T>
-inline auto check_blur_extent(std::span<T> max_edge_map_1, std::span<T> max_edge_map_2,
-                   std::span<T> max_edge_map_3,
-                   T threshold, T min_zero) -> std::pair<bool, T>
+inline auto check_blur_extent(std::span<T> max_edge_map_1,
+                              std::span<T> max_edge_map_2,
+                              std::span<T> max_edge_map_3, T threshold,
+                              T min_zero) -> std::pair<bool, T>
 {
     assert(max_edge_map_1.size() == max_edge_map_2.size() &&
            max_edge_map_2.size() == max_edge_map_3.size());
-    
+
     auto zipped =
         ranges::views::zip(max_edge_map_1, max_edge_map_2, max_edge_map_3);
     auto edge_count = 0U;
@@ -191,27 +192,23 @@ inline auto check_blur_extent(std::span<T> max_edge_map_1, std::span<T> max_edge
         return false;
     };
 
-    auto rule_2 = [&](int i){
+    auto rule_2 = [&](int i)
+    {
         const auto& [emax_1, emax_2, emax_3] = zipped[i];
-        if(emax_1 > emax_2 && emax_2 > emax_3) {
-            n_da ++;
-        }
+        if (emax_1 > emax_2 && emax_2 > emax_3) { n_da++; }
     };
 
     auto edges = std::views::iota(0) | std::views::take(max_edge_map_1.size()) |
-        std::views::filter(rule_1);
+                 std::views::filter(rule_1);
 
     std::ranges::for_each(edges, rule_2);
 
     auto per = static_cast<T>(n_da) / static_cast<T>(edge_count);
     auto is_blurry = true;
-    if(per > min_zero) {
-        is_blurry = false;
-    }
+    if (per > min_zero) { is_blurry = false; }
 
     // calculate the blur extent
     T blur_extent{};
-
 
     return std::make_pair(is_blurry, blur_extent);
 }
@@ -236,7 +233,7 @@ inline auto check_blur_extent(std::span<T> max_edge_map_1, std::span<T> max_edge
  */
 template <Floating_point_type T>
 inline auto is_blur(const cv::Mat& img, T threshold,
-                    T min_zero) -> std::optional<T>
+                    T min_zero) -> std::pair<bool, T>
 {
     cv::Mat gray_img = img.clone();
     // convert the image to gray scale
@@ -246,9 +243,9 @@ inline auto is_blur(const cv::Mat& img, T threshold,
     }
 
     T alpha = static_cast<T>(1.0f / 255.0f);
-    // the data type of the gray image is set to either CV_32F or CV_64F using T
-    // the values in the gray image scaled using 1 / 255 to bring all the values
-    // to [0, 1] range
+    //  the data type of the gray image is set to either CV_32F or CV_64F using
+    //  T the values in the gray image scaled using 1 / 255 to bring all the
+    //  values to [0, 1] range
     gray_img.convertTo(gray_img, std::is_same_v<T, float> ? CV_32F : CV_64F,
                        alpha);
 
@@ -296,18 +293,11 @@ inline auto is_blur(const cv::Mat& img, T threshold,
     // Apply algorithm 2 to see if the image is blurry or not
     // if yes to what extent
 
-    auto output = detail::check_blur_extent<T>(max_edge_maps.at(0), max_edge_maps.at(1),
-                      max_edge_maps.at(2), threshold, min_zero);
-    
-    std::cout << "Image is ";
-    if(output.first) {
-        std::cout << "blurry." << std::endl;
-    }
-    else {
-        std::cout << "non-blurry." << std::endl;
-    }
-    
-    return std::nullopt;
+    auto output =
+        detail::check_blur_extent<T>(max_edge_maps.at(0), max_edge_maps.at(1),
+                                     max_edge_maps.at(2), threshold, min_zero);
+
+    return output;
 }
 }  // namespace blur_detection
 

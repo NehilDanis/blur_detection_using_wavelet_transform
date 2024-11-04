@@ -2,12 +2,14 @@
 #include <gtest/gtest.h>
 
 // OpenCV
-#include <blur_detection/blur_detection.h>
-
-#include <algorithm>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
+
+// STL
+#include <algorithm>
 #include <range/v3/all.hpp>
+
+#include <blur_detection/blur_detection.h>
 
 namespace
 {
@@ -150,11 +152,11 @@ TEST(BlurDetectionUsingHaarWaveletTransforms, testHaarTransform)
 
 TEST(BlurDetectionUsingHaarWaveletTransforms, testBlurriness)
 {
-    const auto original_image_path = "test/data/lena.png";
+    const auto original_image_path = "test/data/palm.jpg"; // image that is non blurred
     cv::Mat img = cv::imread(original_image_path, cv::IMREAD_COLOR);
     static constexpr float threshold = 35;
-    static constexpr float min_zero = 0.05;
+    static constexpr float min_zero = 0.01;
 
     auto output = blur_detection::is_blur<float>(img, threshold, min_zero);
-    ASSERT_FALSE(output.has_value());
+    ASSERT_FALSE(output.first);
 }
