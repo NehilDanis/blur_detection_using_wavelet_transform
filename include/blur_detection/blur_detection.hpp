@@ -1,5 +1,5 @@
-#ifndef BLUR_DETECTION_H  // BLUR_DETECTION_H
-#define BLUR_DETECTION_H  // BLUR_DETECTION_H
+#ifndef BLUR_DETECTION_H  // BLUR_DETECTION_HPP
+#define BLUR_DETECTION_H  // BLUR_DETECTION_HPP
 
 // STL
 #include <algorithm>
@@ -321,4 +321,4 @@ inline auto is_blur(const cv::Mat& img, T threshold,
 }
 }  // namespace blur_detection
 
-#endif  // BLUR_DETECTION_H
+#endif  // BLUR_DETECTION_HPP

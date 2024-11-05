@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <range/v3/all.hpp>
 
-#include <blur_detection/blur_detection.h>
+#include <blur_detection/blur_detection.hpp>
 
 namespace
 {
