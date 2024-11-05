@@ -21,7 +21,7 @@ namespace blur_detection
  * std::is_floating_point is not used here.
  */
 template <typename T>
-concept Floating_point_type =
+concept floating_point_type =
     std::is_same_v<T, float> || std::is_same_v<T, double>;
 
 namespace detail
@@ -36,7 +36,7 @@ namespace detail
  * @param HL horizontal detail
  * @param HH diagonal detail
  */
-template <Floating_point_type T>
+template <floating_point_type T>
 inline auto haar_transform(const cv::Mat& src, cv::OutputArray LL,
                            cv::OutputArray LH, cv::OutputArray HL,
                            cv::OutputArray HH) -> void
@@ -44,17 +44,18 @@ inline auto haar_transform(const cv::Mat& src, cv::OutputArray LL,
     CV_Assert(src.type() == cv::traits::Type<T>::value);
     constexpr size_t side = 2;
     CV_Assert(src.rows >= side && src.cols >= 2);
-    auto filter_size = cv::Size(side, side);
-    T coeff = static_cast<T>(0.5f);
+
+    const auto filter_size = cv::Size(side, side);
+    const auto coeff = static_cast<T>(0.5f);
 
     cv::Mat ll_kernel =
-        (cv::Mat_<float>(filter_size) << coeff, coeff, coeff, coeff);
+        (cv::Mat_<T>(filter_size) << coeff, coeff, coeff, coeff);
     cv::Mat lh_kernel =
-        (cv::Mat_<float>(filter_size) << coeff, -coeff, coeff, -coeff);
+        (cv::Mat_<T>(filter_size) << coeff, -coeff, coeff, -coeff);
     cv::Mat hl_kernel =
-        (cv::Mat_<float>(filter_size) << coeff, coeff, -coeff, -coeff);
+        (cv::Mat_<T>(filter_size) << coeff, coeff, -coeff, -coeff);
     cv::Mat hh_kernel =
-        (cv::Mat_<float>(filter_size) << coeff, -coeff, -coeff, coeff);
+        (cv::Mat_<T>(filter_size) << coeff, -coeff, -coeff, coeff);
 
     int num_row_pass = src.rows / side;
     int num_col_pass = src.cols / side;
@@ -98,7 +99,7 @@ inline auto haar_transform(const cv::Mat& src, cv::OutputArray LL,
  * @param HH
  * @param edge_map
  */
-template <Floating_point_type T>
+template <floating_point_type T>
 inline auto calculate_edge_map(const cv::Mat& LH, const cv::Mat& HL,
                                const cv::Mat& HH,
                                cv::OutputArray edge_map) -> void
@@ -141,12 +142,12 @@ inline auto calculate_edge_map(const cv::Mat& LH, const cv::Mat& HL,
  * @param filter_size
  * @param max_edge_map
  */
-template <Floating_point_type T>
+template <floating_point_type T>
 inline auto calculate_max_edge_map(const cv::Mat& edge_map, size_t filter_size,
                                    std::vector<T>& max_edge_map) -> void
 {
     CV_Assert(edge_map.type() == cv::traits::Type<T>::value);
-    size_t stride = filter_size;
+
     auto num_row_pass = (edge_map.rows / filter_size);
     auto num_col_pass = (edge_map.cols / filter_size);
     size_t output_size =
@@ -167,7 +168,7 @@ inline auto calculate_max_edge_map(const cv::Mat& edge_map, size_t filter_size,
     }
 }
 
-template <Floating_point_type T>
+template <floating_point_type T>
 inline auto check_blur_extent(std::span<T> max_edge_map_1,
                               std::span<T> max_edge_map_2,
                               std::span<T> max_edge_map_3, T threshold,
@@ -178,7 +179,7 @@ inline auto check_blur_extent(std::span<T> max_edge_map_1,
 
     auto zipped =
         ranges::views::zip(max_edge_map_1, max_edge_map_2, max_edge_map_3);
-        
+
     auto edge_count = 0U;
     auto n_da = 0U;
     auto n_rg = 0U;
@@ -228,7 +229,7 @@ inline auto check_blur_extent(std::span<T> max_edge_map_1,
     n_brg = std::ranges::distance(blurred_roof_gstep_structures);
 
     // calculate the blur extent
-    T blur_extent = static_cast<T>(n_brg) / static_cast<T>(n_rg);
+    const auto blur_extent = static_cast<T>(n_brg) / static_cast<T>(n_rg);
 
     return std::make_pair(is_blurry, blur_extent);
 }
@@ -251,7 +252,7 @@ inline auto check_blur_extent(std::span<T> max_edge_map_1,
  *
  * @returns The blur extent in case of a blurry image, otherwise nullopt.
  */
-template <Floating_point_type T>
+template <floating_point_type T>
 inline auto is_blur(const cv::Mat& img, T threshold,
                     T min_zero) -> std::pair<bool, T>
 {
@@ -262,7 +263,7 @@ inline auto is_blur(const cv::Mat& img, T threshold,
         cv::cvtColor(img, gray_img, cv::COLOR_BGR2GRAY);
     }
 
-    T alpha = static_cast<T>(1.0f / 255.0f);
+    const auto alpha = static_cast<T>(1.0f / 255.0f);
     //  the data type of the gray image is set to either CV_32F or CV_64F using
     //  T the values in the gray image scaled using 1 / 255 to bring all the
     //  values to [0, 1] range
@@ -274,15 +275,15 @@ inline auto is_blur(const cv::Mat& img, T threshold,
     threshold *= alpha;
 
     // 3-Level Haar Transform
-    cv::Mat LL1, LH1, HL1, HH1;
+    cv::Mat LL1{}, LH1{}, HL1{}, HH1{};
     detail::haar_transform<T>(gray_img, LL1, LH1, HL1,
                               HH1);  // apply transform on gray img
 
-    cv::Mat LL2, LH2, HL2, HH2;
+    cv::Mat LL2{}, LH2{}, HL2{}, HH2{};
     detail::haar_transform<T>(LL1, LL2, LH2, HL2,
                               HH2);  // apply transform on LL1
 
-    cv::Mat LL3, LH3, HL3, HH3;
+    cv::Mat LL3{}, LH3{}, HL3{}, HH3{};
     detail::haar_transform<T>(LL2, LL3, LH3, HL3,
                               HH3);  // apply transform on LL2
 
@@ -307,17 +308,12 @@ inline auto is_blur(const cv::Mat& img, T threshold,
         edge_maps.at(1), std::pow(filter_size, 2),
         max_edge_maps.at(1));  // 4 x 4
     blur_detection::detail::calculate_max_edge_map<T>(
-        edge_maps.at(2), std::pow(filter_size, 1),
+        edge_maps.at(2), filter_size,
         max_edge_maps.at(2));  // 2 x 2
 
-    // Apply algorithm 2 to see if the image is blurry or not
-    // if yes to what extent
-
-    auto output =
-        detail::check_blur_extent<T>(max_edge_maps.at(0), max_edge_maps.at(1),
-                                     max_edge_maps.at(2), threshold, min_zero);
-
-    return output;
+    return detail::check_blur_extent<T>(
+        max_edge_maps.at(0), max_edge_maps.at(1), max_edge_maps.at(2),
+        threshold, min_zero);
 }
 }  // namespace blur_detection
 

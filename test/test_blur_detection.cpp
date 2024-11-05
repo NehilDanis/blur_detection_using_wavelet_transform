@@ -7,9 +7,8 @@
 
 // STL
 #include <algorithm>
-#include <range/v3/all.hpp>
-
 #include <blur_detection/blur_detection.hpp>
+#include <range/v3/all.hpp>
 
 namespace
 {
@@ -137,7 +136,6 @@ TEST(BlurDetectionUsingHaarWaveletTransforms, testHaarTransform)
     ASSERT_NEAR(HL.at<float>(0, 0), -1.0f, TOLERANCE);
     ASSERT_NEAR(HH.at<float>(0, 0), 0.0f, TOLERANCE);
 
-
     /**
      * src  1, 3
      *      2, 2
@@ -152,7 +150,8 @@ TEST(BlurDetectionUsingHaarWaveletTransforms, testHaarTransform)
 
 TEST(BlurDetectionUsingHaarWaveletTransforms, testBlurriness)
 {
-    const auto original_image_path = "test/data/palm.jpg"; // image that is non blurred
+    const auto original_image_path =
+        "test/data/palm.jpg";  // image that is non blurred
     cv::Mat img = cv::imread(original_image_path, cv::IMREAD_COLOR);
     static constexpr float threshold = 35;
     static constexpr float min_zero = 0.01;
