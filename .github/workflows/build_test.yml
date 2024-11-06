@@ -41,14 +41,16 @@ jobs:
         run: |
           cmake --install ${{github.workspace}}/build/$BUILD_TYPE --prefix package/$BUILD_TYPE
           echo "Packing blur-detection-lib-package-$BUILD_TYPE completed"
+
       - name: Verify Installed Test Executable
         run: ls -l ./package/Release/bin/test/
+
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
-          path: ./package/$BUILD_TYPE
-          retention-days: 1
+          path: ./package/$BUILD_TYPE/bin/test/test_blur_detection
+
   # Test Job
   test:
     runs-on: ubuntu-latest
