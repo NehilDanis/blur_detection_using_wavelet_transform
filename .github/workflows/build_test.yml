@@ -46,6 +46,7 @@ jobs:
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
           path: ./package/$BUILD_TYPE
+          retention-days: 1
   # Test Job
   test:
     runs-on: ubuntu-latest
