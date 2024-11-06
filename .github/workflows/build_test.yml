@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
-          path: package/$BUILD_TYPE
+          path: ./package/$BUILD_TYPE
           retention-days: 1
   # Test Job
   test:
