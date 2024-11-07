@@ -18,6 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install CMake
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -39,17 +44,14 @@ jobs:
       - name: Package the library
         id: package
         run: |
-          cmake --install ${{github.workspace}}/build/$BUILD_TYPE --prefix package/$BUILD_TYPE
+          cmake --install ${{github.workspace}}/build/$BUILD_TYPE --prefix ${{github.workspace}}/package/$BUILD_TYPE
           echo "Packing blur-detection-lib-package-$BUILD_TYPE completed"
-
-      - name: Verify Installed Test Executable
-        run: ls -l ./package/Release/bin/test/
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
-          path: ./package/$BUILD_TYPE/bin/test/test_blur_detection
+          path: ${{github.workspace}}/package/$BUILD_TYPE
 
   # Test Job
   test:
@@ -63,9 +65,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
-          path: package/$BUILD_TYPE
+          path: ${{github.workspace}}/package/$BUILD_TYPE
 
       - name: Run Tests
         run: |
           ./bin/test/test_blur_detection
-        working-directory: package/$BUILD_TYPE
+        working-directory: ${{github.workspace}}/package/$BUILD_TYPE
