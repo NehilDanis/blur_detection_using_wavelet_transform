@@ -46,7 +46,7 @@ jobs:
         run: |
           cmake --install ${{github.workspace}}/build/$BUILD_TYPE --prefix ${{github.workspace}}/package/$BUILD_TYPE
           echo "Packing blur-detection-lib-package-$BUILD_TYPE completed"
-          
+
       - name: Debug package directory
         run: |
           echo "Listing contents of package directory:"
@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
-          path: ${{github.workspace}}/package/$BUILD_TYPE
+          path: ${{github.workspace}}/package/$BUILD_TYPE/bin/test
 
   # Test Job
   test:
@@ -71,7 +71,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
-          path: ${{github.workspace}}/package/$BUILD_TYPE
+          path: ${{github.workspace}}/package/$BUILD_TYPE/bin/test
 
       - name: Run Tests
         run: |
