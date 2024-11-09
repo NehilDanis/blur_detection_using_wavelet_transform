@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: ["master"]
 
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
 jobs:
   # Build job
   build:
@@ -29,31 +33,25 @@ jobs:
           pip install -r ${{github.workspace}}/requirements.txt
 
       - name: Run conan install
-        run: conan profile detect && conan install . -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True -sbuild_type=Release -of=conan --build=missing
+        run: conan profile detect && conan install . -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True -sbuild_type=$BUILD_TYPE -of=conan --build=missing
 
       - name: Configure CMake
-        run: cmake -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/conan/build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -B ${{github.workspace}}/build/Release -S .
+        run: cmake -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/conan/build/$BUILD_TYPE/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTING=ON -B ${{github.workspace}}/build/$BUILD_TYPE -S .
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build/Release -j4
+        run: cmake --build ${{github.workspace}}/build/$BUILD_TYPE -j4
 
       - name: Package the library
         id: package
         run: |
-          cmake --install ${{github.workspace}}/build/Release --prefix package/Release
-          echo "Packing blur-detection-lib-package-Release completed"
-
-      - name: Debug package directory
-        run: |
-          echo "Listing contents of package directory:"
-          ls -R package/Release
-        shell: bash
+          cmake --install ${{github.workspace}}/build/$BUILD_TYPE --prefix package/$BUILD_TYPE
+          echo "Packing blur-detection-lib-package-$BUILD_TYPE completed"
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: blur-detection-lib-package-Release
-          path: package/Release/bin/test/
+          name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
+          path: package/${{ env.BUILD_TYPE }}/bin/test/
 
   # Test Job
   test:
@@ -66,10 +64,11 @@ jobs:
       - name: Download package artifact
         uses: actions/download-artifact@v4
         with:
-          name: blur-detection-lib-package-Release
-          path: package/Release/bin/test/
+          name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
+          path: package/${{ env.BUILD_TYPE }}/bin/test
 
       - name: Run Tests
         run: |
+          chmod +x /bin/test/test_blur_detection
           ./bin/test/test_blur_detection
-        working-directory: package/Release
+        working-directory: /package/${{ env.BUILD_TYPE }}
