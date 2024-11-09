@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
-          path: package/$BUILD_TYPE/bin/test/
+          path: package/Release/bin/test/
 
   # Test Job
   test:
@@ -71,7 +71,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: blur-detection-lib-package-${{ env.BUILD_TYPE }}
-          path: package/$BUILD_TYPE/bin/test/
+          path: package/Release/bin/test/
 
       - name: Run Tests
         run: |
