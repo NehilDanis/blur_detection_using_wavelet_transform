@@ -2,7 +2,7 @@
 
 | Build Status | Test Status |
 | :---: | :----: |
-| ![Build Status](https://github.com/NehilDanis/blur_detection_using_wavelet_transform/actions/workflows/build_test.yml/badge.svg?job=build) | ![Test Status](https://github.com/NehilDanis/blur_detection_using_wavelet_transform/actions/workflows/build_test.yml/badge.svg?job=test) |
+| [![Build Status](https://github.com/NehilDanis/blur_detection_using_wavelet_transform/actions/workflows/build_test.yml/badge.svg?job=build)](https://github.com/NehilDanis/blur_detection_using_wavelet_transform/actions/workflows/build_test.yml) | [![Test Status](https://github.com/NehilDanis/blur_detection_using_wavelet_transform/actions/workflows/build_test.yml/badge.svg?job=test)](https://github.com/NehilDanis/blur_detection_using_wavelet_transform/actions/workflows/build_test.yml) |
 
 This repository includes the implementation of the [Blur Detection for Digital Images Using Wavelet Transform](http://tonghanghang.org/pdfs/icme04_blur.pdf) paper using C++20.
 
