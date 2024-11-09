@@ -46,6 +46,7 @@ jobs:
         run: |
           cmake --install ${{github.workspace}}/build/$BUILD_TYPE --prefix package/$BUILD_TYPE
           echo "Packing blur-detection-lib-package-$BUILD_TYPE completed"
+          mkdir -p package/$BUILD_TYPE/test/data
           cp -R ${{github.workspace}}/test/data/ package/$BUILD_TYPE/test/data
 
       - name: Upload package artifact
