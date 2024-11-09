@@ -69,6 +69,6 @@ jobs:
 
       - name: Run Tests
         run: |
-          chmod +x /bin/test/test_blur_detection
+          chmod +x bin/test/test_blur_detection
           ./bin/test/test_blur_detection
-        working-directory: /package/${{ env.BUILD_TYPE }}
+        working-directory: package/${{ env.BUILD_TYPE }}
