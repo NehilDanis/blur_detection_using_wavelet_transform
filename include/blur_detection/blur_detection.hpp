@@ -13,6 +13,12 @@
 #include <opencv2/core/traits.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+/**
+ * Paper implementation of Blur Detection for Digital Images Using Wavelet
+ * Transform using C++20. The library is fully templated and can only work with
+ * double and float data types.
+ */
+
 namespace blur_detection
 {
 /**
@@ -31,10 +37,10 @@ namespace detail
  * @brief This function takes a source image and applies one level of the haar
  * filter and outputs low and high spatial resolution outputs.
  *
- * @param LL weighted average
- * @param LH vertical detail
- * @param HL horizontal detail
- * @param HH diagonal detail
+ * @param LL Low-Low is low resolution version of the source image.
+ * @param LH Low-High captures the vertical details on the source image.
+ * @param HL High-Low captures the horitontal details on the source image.
+ * @param HH High-High captures the diagonal details on the source image.
  */
 template <floating_point_type T>
 inline auto haar_transform(const cv::Mat& src, cv::OutputArray LL,
@@ -94,10 +100,10 @@ inline auto haar_transform(const cv::Mat& src, cv::OutputArray LL,
  * and HH, should have the same shape. The formula used to consturct edge map is
  * as follows sqrt(LH^2 + HL^2 + HH^2)
  *
- * @param LH
- * @param HL
- * @param HH
- * @param edge_map
+ * @param LH vertical detail calculated by the haar transform
+ * @param HL horizontal detail calculated by the haar transform
+ * @param HH diagonal detail calculated by the haar transform
+ * @param edge_map calculated edge map using LH, HL, HH.
  */
 template <floating_point_type T>
 inline auto calculate_edge_map(const cv::Mat& LH, const cv::Mat& HL,
@@ -138,9 +144,10 @@ inline auto calculate_edge_map(const cv::Mat& LH, const cv::Mat& HL,
  * So we get a coaser map than the input edge_map. The maximum edge_map will be
  * the size of floor(edge_map/filter_size)
  *
- * @param edge_map
- * @param filter_size
- * @param max_edge_map
+ * @param edge_map Edge map calculated using the coefficients of the haar
+ * transform.
+ * @param filter_size Size of the filter
+ * @param max_edge_map Calculated maximum edge map
  */
 template <floating_point_type T>
 inline auto calculate_max_edge_map(const cv::Mat& edge_map, size_t filter_size,
@@ -168,6 +175,21 @@ inline auto calculate_max_edge_map(const cv::Mat& edge_map, size_t filter_size,
     }
 }
 
+/**
+ * @brief
+ *
+ * @param max_edge_map_1 maximum edge map generated from first step of the Haar transform.
+ * @param max_edge_map_2 maximum edge map generated from second step of the Haar transform.
+ * @param max_edge_map_3 maximum edge map generated from third step of the Haar transform.
+ * @param threshold The threshold value that will be used to define different
+ * types of edges. This value lies in the range [0, 255].
+ * @param min_zero The threshold for deciding if an image is blurry or not.
+ * Blurry images does not include so many dirac and astep structures. Hence the
+ * ratio of all the dirac and astep structures in all the edges is calculated,
+ * and if this ratio is below min_zero value then the image is considered
+ * blurry. Since a ratio can only be in [0, 1] range, min_zero value should also
+ * be in the same range.
+ */
 template <floating_point_type T>
 inline auto check_blur_extent(std::span<T> max_edge_map_1,
                               std::span<T> max_edge_map_2,
